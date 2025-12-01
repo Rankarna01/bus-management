@@ -36,10 +36,15 @@ include '../layouts/topbar.php';
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm text-slate-600">
                 <?php
-                // Query Join untuk mengambil nama Mandor juga
-                $query = "SELECT l.*, u.nama_lengkap as nama_mandor 
+                // UPDATED QUERY: DOUBLE JOIN LOKASI (ASAL & TUJUAN)
+                $query = "SELECT l.*, 
+                                 u.nama_lengkap as nama_mandor,
+                                 k_asal.nama_lokasi as nama_asal,
+                                 k_tujuan.nama_lokasi as nama_tujuan
                           FROM laporan_keberangkatan l 
                           JOIN users u ON l.user_id = u.id 
+                          LEFT JOIN kategori_lokasi k_asal ON l.lokasi_id = k_asal.id
+                          LEFT JOIN kategori_lokasi k_tujuan ON l.tujuan_id = k_tujuan.id
                           ORDER BY l.tanggal_berangkat DESC, l.waktu_berangkat DESC";
                 
                 $result = mysqli_query($conn, $query);
@@ -65,7 +70,16 @@ include '../layouts/topbar.php';
                             </td>
 
                             <td class="py-5 px-6 align-top">
-                                <div class="font-medium text-slate-700 mb-1"><?= $row['tujuan'] ?></div>
+                                <div class="flex flex-col gap-1 mb-2">
+                                    <div class="flex items-center text-xs text-slate-500">
+                                        <i class="fa-regular fa-circle text-[10px] mr-2 text-blue-500"></i>
+                                        <?= $row['nama_asal'] ?? '-' ?>
+                                    </div>
+                                    <div class="flex items-center font-bold text-slate-700">
+                                        <i class="fa-solid fa-location-dot text-xs mr-2 text-red-500"></i>
+                                        <?= $row['nama_tujuan'] ?? '-' ?>
+                                    </div>
+                                </div>
                                 <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">
                                     <i class="fa-solid fa-users text-[10px]"></i> <?= $row['jumlah_penumpang'] ?> Org
                                 </span>

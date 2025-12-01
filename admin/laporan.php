@@ -36,11 +36,19 @@ include '../layouts/topbar.php';
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm text-slate-600">
                 <?php
-                // Tampilkan semua data descending
-                $query = "SELECT l.*, u.nama_lengkap as nama_mandor 
+                // PERBAIKAN QUERY: 
+                // Kita tambahkan JOIN ke kategori_lokasi dua kali (k_asal dan k_tujuan)
+                // untuk mengambil nama lokasi berdasarkan ID yang tersimpan.
+                $query = "SELECT l.*, 
+                                 u.nama_lengkap as nama_mandor,
+                                 k_asal.nama_lokasi as nama_asal,
+                                 k_tujuan.nama_lokasi as nama_tujuan
                           FROM laporan_keberangkatan l 
                           JOIN users u ON l.user_id = u.id 
+                          LEFT JOIN kategori_lokasi k_asal ON l.lokasi_id = k_asal.id
+                          LEFT JOIN kategori_lokasi k_tujuan ON l.tujuan_id = k_tujuan.id
                           ORDER BY l.created_at DESC";
+                
                 $result = mysqli_query($conn, $query);
 
                 if(mysqli_num_rows($result) > 0) {
@@ -68,7 +76,17 @@ include '../layouts/topbar.php';
                         </td>
 
                         <td class="py-5 px-6 align-top">
-                            <div class="font-medium text-slate-700 mb-1"><?= $row['tujuan'] ?></div>
+                            <div class="flex flex-col gap-1 mb-2">
+                                <div class="flex items-center text-xs text-slate-500">
+                                    <i class="fa-regular fa-circle text-[10px] mr-2 text-blue-500"></i>
+                                    <?= $row['nama_asal'] ?? '-' ?>
+                                </div>
+                                <div class="flex items-center font-bold text-slate-700">
+                                    <i class="fa-solid fa-location-dot text-xs mr-2 text-red-500"></i>
+                                    <?= $row['nama_tujuan'] ?? '-' ?>
+                                </div>
+                            </div>
+                            
                             <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">
                                 <i class="fa-solid fa-users text-[10px]"></i> <?= $row['jumlah_penumpang'] ?> Org
                             </span>
@@ -123,7 +141,7 @@ include '../layouts/topbar.php';
                 <?php 
                     endwhile; 
                 } else {
-                    echo "<tr><td colspan='6' class='text-center py-12 text-slate-400 italic bg-white'>Tidak ada data laporan yang ditemukan.</td></tr>";
+                    echo "<tr><td colspan='6' class='text-center py-12 text-slate-400 italic bg-white'>Tidak ada data laporan.</td></tr>";
                 }
                 ?>
             </tbody>
@@ -132,7 +150,6 @@ include '../layouts/topbar.php';
 </div>
 
 <script>
-    // Fungsi Lihat Foto menggunakan SweetAlert Modern
     function lihatFoto(url) {
         Swal.fire({
             imageUrl: url,
@@ -140,22 +157,19 @@ include '../layouts/topbar.php';
             imageAlt: 'Dokumentasi',
             showCloseButton: true,
             showConfirmButton: false,
-            backdrop: `rgba(15, 23, 42, 0.6)`, // Slate-900 with opacity
-            customClass: {
-                popup: 'rounded-2xl'
-            }
+            backdrop: `rgba(15, 23, 42, 0.6)`,
+            customClass: { popup: 'rounded-2xl' }
         });
     }
 
-    // Fungsi Konfirmasi Hapus Modern
     function konfirmasiHapus(id) {
         Swal.fire({
             title: 'Hapus Laporan?',
             text: "Data yang dihapus tidak bisa dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444', // Tailwind Red-500
-            cancelButtonColor: '#64748b', // Tailwind Slate-500
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal',
             customClass: {
